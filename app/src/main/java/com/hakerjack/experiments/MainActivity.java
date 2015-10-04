@@ -10,11 +10,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 
-public class MainActivity extends Activity implements CustomSwipeRefreshLayout2.MoveYListener{
-//    private SwipeRefreshLayout mRefreshLayout;
-    private CustomSwipeRefreshLayout2 mRefreshLayout;
+public class MainActivity extends Activity implements CustomSwipeRefreshLayout.OffsetViewListener {
+    private CustomSwipeRefreshLayout mRefreshLayout;
     private RecyclerView mRecyclerView;
-    private int mCurrentViewTop;
+    private int mRecyclerViewOriginalTop;
 
 
     @Override
@@ -22,8 +21,8 @@ public class MainActivity extends Activity implements CustomSwipeRefreshLayout2.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mRefreshLayout = (CustomSwipeRefreshLayout2) findViewById(R.id.refresh_layout);
-        mRefreshLayout.setOnRefreshListener(new CustomSwipeRefreshLayout2.OnRefreshListener() {
+        mRefreshLayout = (CustomSwipeRefreshLayout) findViewById(R.id.refresh_layout);
+        mRefreshLayout.setOnRefreshListener(new CustomSwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 mRefreshLayout.setRefreshing(true);
@@ -33,28 +32,13 @@ public class MainActivity extends Activity implements CustomSwipeRefreshLayout2.
                         mRefreshLayout.setRefreshing(false);
                         Toast.makeText(mRefreshLayout.getContext(), "refresh complete", Toast.LENGTH_SHORT).show();
                     }
-                }, 3000);
+                }, 1500);
 
             }
         });
 
-//        mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh_layout);
-//        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                mRefreshLayout.setRefreshing(true);
-//                new Handler().postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mRefreshLayout.setRefreshing(false);
-//                        Toast.makeText(mRefreshLayout.getContext(), "refresh complete", Toast.LENGTH_SHORT).show();
-//                    }
-//                }, 3000);
-//
-//            }
-//        });
-
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerViewOriginalTop = mRecyclerView.getTop();
         RecyclerVIewAdapter adapter = new RecyclerVIewAdapter();
         mRecyclerView.setAdapter(adapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
@@ -77,15 +61,13 @@ public class MainActivity extends Activity implements CustomSwipeRefreshLayout2.
                 }
             }
         });
-        mCurrentViewTop = mRecyclerView.getTop();
-        Log.i("KJ", "currentViewTop:" + mCurrentViewTop);
-        mRefreshLayout.setMoveYListener(this);
+        mRefreshLayout.setOffsetViewListener(this);
     }
 
     @Override
-    public void onMoveY(int targetY) {
-        Log.i("KJ", "targetY:" + targetY + " currentTOp: " + mCurrentViewTop);
-        mRecyclerView.offsetTopAndBottom(targetY - mCurrentViewTop);
-        mCurrentViewTop = mRecyclerView.getTop();
+    public void onOffset(int offset) {
+        if (mRecyclerView.getTop() + offset >= mRecyclerViewOriginalTop) {
+            mRecyclerView.offsetTopAndBottom(offset);
+        }
     }
 }
